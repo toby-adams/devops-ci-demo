@@ -31,32 +31,34 @@ pipeline {
     }
 
     stage("Python: venv + test") {
-      steps {
-        dir("python") {
-          sh '''
-            python3 -m venv "$VENV_DIR"
-            . "$VENV_DIR/bin/activate"
-            pip install --upgrade pip
-            pip install -r requirements.txt
-            pytest -q
-          '''
-        }
-      }
+  steps {
+    dir("python") {
+      sh '''
+        python3 -m venv "$VENV_DIR"
+        . "$VENV_DIR/bin/activate"
+        pip install --upgrade pip
+        pip install -r requirements.txt
+        export PYTHONPATH="$WORKSPACE/python"
+        pytest -q
+      '''
     }
+  }
+}
 
     stage("Generate build artifact (Python automation)") {
-      steps {
-        dir("python") {
-          sh '''
-            . "$VENV_DIR/bin/activate"
-            export TS_TESTS_PASSED=2
-            export PY_TESTS_PASSED=1
-            export BUILD_REPORT_PATH="${WORKSPACE}/${BUILD_REPORT_PATH}"
-            python -m src.reportgen
-          '''
-        }
-      }
+  steps {
+    dir("python") {
+      sh '''
+        . "$VENV_DIR/bin/activate"
+        export PYTHONPATH="$WORKSPACE/python"
+        export TS_TESTS_PASSED=2
+        export PY_TESTS_PASSED=1
+        export BUILD_REPORT_PATH="${WORKSPACE}/${BUILD_REPORT_PATH}"
+        python -m src.reportgen
+      '''
     }
+  }
+}
 
     stage("Archive artifact") {
       steps {
